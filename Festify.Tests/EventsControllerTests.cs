@@ -10,23 +10,44 @@ using Festify.Api.Models;
 
 namespace Festify.Tests;
 
+// Boots the full ASP.NET Core pipeline in-process using a TestServer — no real TCP port is
+// opened. Requests made through clients it creates are routed through an in-memory transport,
+// so tests run without starting an actual HTTP server.
 public class FestifyWebApplicationFactory : WebApplicationFactory<Program>
 {
+    // Generated eagerly when the factory is constructed, before any DI container is built.
+    // Storing it as a field guarantees that every call into ConfigureWebHost — and therefore
+    // every DbContext resolved from this factory's container — uses the exact same name,
+    // giving each factory instance its own isolated in-memory store. Because IClassFixture
+    // creates one factory per test class, two test classes running in parallel each get a
+    // distinct Guid and cannot see each other's data.
+    private readonly string _dbName = Guid.NewGuid().ToString();
+
+    // Called once when the test host is first built. ConfigureTestServices runs after the
+    // application's own DI registrations, so anything registered here wins over Program.cs.
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureTestServices(services =>
         {
+            // Remove the production DbContext options (which point to the "Festify"
+            // in-memory database registered in Program.cs) so we can substitute our own.
             var toRemove = services
                 .Where(d => d.ServiceType == typeof(DbContextOptions<FestifyDbContext>))
                 .ToList();
             foreach (var d in toRemove) services.Remove(d);
 
+            // Register the test database using the factory's fixed Guid name. DbContextOptions<T>
+            // is a singleton, so all request scopes share the same store — data written in
+            // one request is visible to subsequent requests within the same test.
             services.AddDbContext<FestifyDbContext>(options =>
-                options.UseInMemoryDatabase("FestifyTest"));
+                options.UseInMemoryDatabase(_dbName));
         });
     }
 }
 
+// IClassFixture<T> tells xUnit to create one FestifyWebApplicationFactory for the entire
+// test class and inject it into every test constructor. This means the in-process server
+// starts once and is reused, rather than being rebuilt per test.
 public class EventsControllerTests : IClassFixture<FestifyWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -35,8 +56,14 @@ public class EventsControllerTests : IClassFixture<FestifyWebApplicationFactory>
     public EventsControllerTests(FestifyWebApplicationFactory factory)
     {
         _factory = factory;
+
+        // CreateClient() returns an HttpClient whose transport is wired directly to the
+        // TestServer pipeline — requests never leave the process.
         _client = factory.CreateClient();
 
+        // Because the factory (and its in-memory database) is shared across all tests,
+        // we reset the database state before each test to ensure isolation. A new DI
+        // scope is opened here to avoid sharing a DbContext instance with the server.
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<FestifyDbContext>();
         db.Events.RemoveRange(db.Events);
