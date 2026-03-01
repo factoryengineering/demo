@@ -52,6 +52,8 @@ Example attributes:
 
 ## Table Dependencies
 
+![VenueEvent-VenueCreated table dependencies](../attachments/VenueEvent-VenueCreated.svg)
+
 ### INSERT `Venue`
 
 One row per event.
