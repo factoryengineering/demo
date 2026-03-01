@@ -17,12 +17,12 @@ Before the talk:
 - [ ] `.claude/skills/` populated on `with-skill` branch with standalone skill for Act 1
 - [ ] Symlinks committed: `.cursor/commands/ → ../.claude/commands/`
 - [ ] `openskills` available globally: `npm install -g openskills` or npx ready
-- [ ] All commands live in `.claude/commands/`: `create-catalog-entry`, `write-migration`, `write-handler`
+- [ ] All commands live in `.claude/commands/`: `write-catalog-entry`, `write-migration`, `write-sql-script`
 
 **Event catalog artifacts (Act 2)**
 - [ ] A real event catalog entry document — not a stub
-- [ ] A real user story document to run `create-catalog-entry` against
-- [ ] Pre-run output for `write-migration` and `write-handler` ready to show
+- [ ] A real user story document to run `write-catalog-entry` against
+- [ ] Pre-run output for `write-migration` and `write-sql-script` ready to show
 - [ ] ERD generation: `mmdc` installed and on PATH, ERD skill ready, SVG output pre-generated as fallback
 
 **Claude Code (Act 3)**
@@ -183,7 +183,7 @@ Skills teach the AI how to do something. Commands tell it what to do with a spec
 The key pattern is three words: **slash-command at-artifact**.
 
 ```
-/write-handler @events/catalog/order-placed.md
+/write-sql-script @events/catalog/order-placed.md
 ```
 
 The command provides the instructions. The artifact provides the target. The AI does the work.
@@ -217,16 +217,16 @@ This is what a catalog entry looks like in our project. Event name, schema, sema
 
 The command read the catalog entry, understood the schema, and produced a migration that creates the right tables, columns, and indexes — following our migration conventions, which live in a skill.
 
-### [DEMO 2C: Run `/write-handler`]
+### [DEMO 2C: Run `/write-sql-script`]
 
 [Run:]
 ```
-/write-handler @events/catalog/order-placed.md
+/write-sql-script @events/catalog/order-placed.md
 ```
 
 [Walk through the output.]
 
-Same source artifact. Different command. Now it produced the handler — our patterns, our structure, our conventions.
+Same source artifact. Different command. Now it produced the SQL scripts — our patterns, our structure, our conventions.
 
 One catalog entry. Two commands. Two production-ready artifacts.
 
@@ -258,18 +258,48 @@ I was producing the catalog entries. The team was consuming them. As long as I k
 
 So I built one more command.
 
-### [DEMO 2D: Run `/create-catalog-entry`]
+### [DEMO 2D: Build `/write-catalog-entry` live]
 
-[Open a user story document. In Cursor, run:]
+Remember the pattern from Act 1. You don't write a command from scratch. You do the task first.
+
+[Open `docs/user-stories/US001-Venue-Management.md`. Send the first prompt:]
+
 ```
-/create-catalog-entry @stories/order-fulfillment.md
+Read @docs/user-stories/US001-Venue-Management.md and produce a draft event catalog entry
+for the event this story implies. Use the structure from @.claude/skills/event-catalog/SKILL.md.
 ```
 
-[Walk through what it does:]
+[Let the output appear. Read it briefly with the audience. The AI will likely produce something almost right — point out two or three things that are wrong. For this story, common misses: it drafts entries for all four CRUD operations instead of just VenueCreated, or it names the event type wrong, or the payload doesn't match the API response shape. Push back specifically:]
 
-This command reads a user story and produces a catalog entry. It uses two skills: one that knows how to load a user story from Azure DevOps using a personal access token, and one that defines the structure and conventions of a catalog entry.
+```
+We only need VenueCreated — the create path. Drop the update and delete events.
+The event type is VenueEvent, not VenueManagement.
+```
 
-It does the domain reasoning — what event does this story imply, what's the schema, what are the semantics. I iterate on the mapping a few times to get it right. Then I commit the command.
+[Let it revise. Now look at the Table Dependencies section. The surrogate key is probably named VenueId — that's not our convention. Point it out:]
+
+```
+The surrogate key should be VenueKey, not VenueId. Our convention is Key suffix for the
+identity column, Guid suffix for the business key. Fix the column name and the description.
+```
+
+[Let it revise again. Now the output looks right — correct event type, correct scope, correct column conventions. Say to the audience:]
+
+That's the output I want. Not approximately right. Exactly right.
+
+[Now send the final prompt:]
+
+```
+The output is exactly right. Create a command in .claude/commands/ that captures this
+process — reading a user story and producing a catalog entry following the conventions
+we just established.
+```
+
+[Let the AI generate the command. Open `.claude/commands/write-catalog-entry.md`.]
+
+Look at what it produced. The frontmatter, the step-by-step process, the specific conventions I enforced during that iteration — all encoded. I didn't write this. I did the task and asked the AI to document what it learned.
+
+That's the same move as Act 1. The only difference is the output is a command instead of a skill.
 
 ### [DEMO 2E: ERD generation]
 
@@ -287,7 +317,7 @@ Now the catalog entry isn't just text. It's a living technical document with a r
 
 The last part of this story is the best part.
 
-The team is now running `/create-catalog-entry` themselves. They're not waiting on me. They take a user story, generate the catalog entry, iterate on it until it's right, then run the migration and handler commands. End to end. One developer. One day.
+The team is now running `/write-catalog-entry` themselves. They're not waiting on me. They take a user story, generate the catalog entry, iterate on it until it's right, then run the migration and SQL script commands. End to end. One developer. One day.
 
 I am no longer the bottleneck. The factory eliminated me from the critical path.
 
@@ -314,7 +344,7 @@ ls -la .cursor/commands
 
 [Show that it's a symlink pointing to `../.claude/commands`.]
 
-The commands I just demonstrated in Cursor — `write-migration`, `write-handler`, `create-catalog-entry` — they live in `.claude/commands/`. The `.cursor/commands/` folder is a symlink that points there.
+The commands I just demonstrated in Cursor — `write-migration`, `write-sql-script`, `write-catalog-entry` — they live in `.claude/commands/`. The `.cursor/commands/` folder is a symlink that points there.
 
 This means the same command files work in Claude Code. In Kilo Code. In Windsurf. One canonical location. Every IDE reads from it.
 
