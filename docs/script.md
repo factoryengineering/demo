@@ -13,7 +13,7 @@
 Before the talk:
 
 **Repository**
-- [ ] Two branches ready: `main` (no skills) and `with-skill` (skills installed)
+- [ ] Three branches ready: `without-skill` (no skills), `with-skill` (skills only), `main` (fully built — commands, agents, workflows)
 - [ ] `.claude/skills/` populated on `with-skill` branch with standalone skill for Act 1
 - [ ] Symlinks committed: `.cursor/commands/ → ../.claude/commands/`
 - [ ] `openskills` available globally: `npm install -g openskills` or npx ready
@@ -78,9 +78,9 @@ The first building block is a skill. A skill is how you teach the AI your team's
 
 Let me show you what that looks like in practice.
 
-### [DEMO 1A: Generic output — `main` branch, Cursor]
+### [DEMO 1A: Generic output — `without-skill` branch, Cursor]
 
-[In Cursor, confirm you're on `main`. Run:]
+[In Cursor, confirm you're on `without-skill`. Run:]
 ```
 Write a failing unit test for AC05 based on @docs/specs/SPEC001-Venue-Management.md
 ```
