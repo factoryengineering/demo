@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Festify.Api/Festify.Api.csproj" />
+  <Project Path="Festify.Tests/Festify.Tests.csproj" />
+</Solution>
