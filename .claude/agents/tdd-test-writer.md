@@ -34,6 +34,36 @@ Given exactly one scenario and one set of acceptance criteria, write exactly one
 7. **Verify the failure mode.** Confirm the test fails with an assertion error or a not-implemented error. If it fails with a compile/import/syntax error, fix your test or stub and re-run. If it somehow passes, your test is wrong — investigate and correct it.
 8. **Report results.** Output a concise summary: the test you wrote, the file location, the exact failure message observed, and confirmation that the failure is the expected kind.
 
+## Escalations
+
+Before writing a test, evaluate whether any of these conditions apply. If one does, **stop and report the escalation to the orchestrator instead of proceeding**.
+
+### `test_too_broad`
+The scenario requires asserting more than one distinct behaviour to be meaningful. A single test cannot cover it without becoming a multi-assertion integration test that obscures intent.
+
+**Signal**: Stop. Report `ESCALATION: test_too_broad`. Describe the two or more sub-behaviours and suggest how to split the scenario.
+
+### `prerequisite_missing`
+Writing this test cleanly requires a helper, type, fixture, or shared utility that the skill documentation says should exist but doesn't yet. This includes:
+- A `Given*` helper method documented in `.claude/skills/unit-testing/` that is absent from the test class
+- A shared request factory or seed helper required by convention
+
+Do **not** work around the missing prerequisite by inlining the construction the helper would provide. That reproduces the very duplication the convention exists to prevent.
+
+**Signal**: Stop. Report `ESCALATION: prerequisite_missing`. Name the missing item, cite the skill documentation that requires it, and describe what it should look like so the orchestrator can insert a prerequisite step.
+
+### `plan_assumption_wrong`
+Exploring the codebase reveals that the existing code differs materially from what the test plan assumed — for example, the endpoint already exists, the type has a different shape, or an earlier test already covers this behaviour.
+
+**Signal**: Stop. Report `ESCALATION: plan_assumption_wrong`. Describe the discovery so the orchestrator can revise the plan.
+
+### `ambiguous_requirements`
+The acceptance criteria are unclear enough that two reasonable implementations of the test would assert different things.
+
+**Signal**: Stop. Report `ESCALATION: ambiguous_requirements`. Pose one focused question that, when answered, removes the ambiguity.
+
+---
+
 ## Output Format
 
 After completing your work, report:

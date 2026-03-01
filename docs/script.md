@@ -405,6 +405,19 @@ will have already produced a test plan. An orchestrator
 will delegate individual scenarios to you. A code writer
 will take your failing test and make it pass.
 
+Conventions: Before writing, read .claude/skills/unit-testing/
+for this project's authoritative test patterns. Those
+skill files take precedence over any existing test code,
+which may predate the conventions.
+
+Escalations: Stop and report to the orchestrator instead
+of proceeding if: the scenario requires more than one
+test to be meaningful (test_too_broad); a helper or
+fixture the skill docs require does not exist yet
+(prerequisite_missing); the codebase differs materially
+from what the plan assumed (plan_assumption_wrong); or
+the criteria are too ambiguous to test (ambiguous_requirements).
+
 Constraints: Run the test after writing it. Confirm it
 fails for the expected reason — an assertion failure or
 a not-implemented stub, not a compile error. Never write
