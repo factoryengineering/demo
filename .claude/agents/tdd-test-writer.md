@@ -23,7 +23,10 @@ Given exactly one scenario and one set of acceptance criteria, write exactly one
 ## Workflow
 
 1. **Understand the scenario.** Read the scenario and acceptance criteria carefully. Identify the single most important behavior being specified.
-2. **Explore the codebase.** Before writing anything, inspect the existing project structure, test conventions, test runner, assertion library, file naming patterns, and any related existing tests. Match the project's established style precisely.
+2. **Explore the codebase.** Before writing anything:
+   - Check `.claude/skills/unit-testing/` for documented conventions — these are the authoritative source of truth for test patterns, helper methods, and structure. Read all files there that are relevant to the test you are about to write.
+   - Then inspect the existing test files for runner commands, imports, and class setup.
+   - When skill documentation and existing test files conflict, **the skill documentation wins.** Existing tests may predate a convention; skill files are maintained deliberately.
 3. **Identify the test target.** Determine the exact module, class, or function to test. Check if it exists.
 4. **Write the test.** Author exactly one test in the appropriate test file, following the project's conventions for test naming, structure, and assertions.
 5. **Create minimal stubs if needed.** If the production code target does not exist, create the smallest possible stub in the appropriate production code location. No logic — just enough to compile/parse.
