@@ -1,0 +1,12 @@
+erDiagram
+    Venue {
+        int VenueKey PK "Surrogate primary key (identity)"
+        uuid VenueGuid UK "Business key; alternate key"
+        varchar_200 Name "Venue name"
+        varchar_500 Address "Full street address"
+        double_precision Latitude "WGS 84 latitude (-90 to +90)"
+        double_precision Longitude "WGS 84 longitude (-180 to +180)"
+        int SeatingCapacity "Maximum audience size"
+        varchar_2000 Description "Optional free-text description; nullable"
+        timestamptz CreatedAt "When ingested into the data warehouse"
+    }
