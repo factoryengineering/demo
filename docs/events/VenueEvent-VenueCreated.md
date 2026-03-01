@@ -52,7 +52,7 @@ Example attributes:
 
 ## Table Dependencies
 
-![VenueEvent-VenueCreated table dependencies](../attachments/VenueEvent-VenueCreated.svg)
+![VenueEvent-VenueCreated table dependencies](../attachments/VenueEvent-VenueCreated.png)
 
 ### INSERT `Venue`
 
