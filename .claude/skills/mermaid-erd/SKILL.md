@@ -1,26 +1,26 @@
 ---
 name: mermaid-erd
-description: Produces Mermaid entity-relationship diagrams for data warehouse tables and embeds the rendered SVG in event catalog entries. Use when creating or updating table dependency diagrams, ERDs for catalog entries, or embedding diagram SVGs in docs/events/ under "Table Dependencies".
+description: Produces Mermaid entity-relationship diagrams for data warehouse tables and embeds the rendered PNG in event catalog entries. Use when creating or updating table dependency diagrams, ERDs for catalog entries, or embedding diagram images in docs/events/ under "Table Dependencies".
 ---
 
 # Mermaid ERD
 
-Produce an Entity-Relationship diagram for a **subset of tables** (seed list), render it to SVG, and embed the image in a catalog entry. Follow this workflow and use **exactly** the tools specified.
+Produce an Entity-Relationship diagram for a **subset of tables** (seed list), render it to PNG, and embed the image in a catalog entry. Follow this workflow and use **exactly** the tools specified.
 
 ## Inputs
 
 - **Seed tables**: Table names to start from (e.g. from a catalog entry's `### INSERT/UPDATE \`TableName\``).
 - **Diagram name**: Matches the catalog entry filename (e.g. `VenueEvent-VenueCreated`).
-- **Catalog file**: Doc that will embed the SVG (e.g. `docs/events/VenueEvent-VenueCreated.md`).
+- **Catalog file**: Doc that will embed the image (e.g. `docs/events/VenueEvent-VenueCreated.md`).
 
 ## File Locations
 
 | Item | Path |
 |------|------|
 | Mermaid source | `docs/mermaid/{Name}.mmd` |
-| SVG output | `docs/attachments/{Name}.svg` |
+| PNG output | `docs/attachments/{Name}.png` |
 | Catalog entry | `docs/events/{Name}.md` |
-| SVG ref (from catalog) | `../attachments/{Name}.svg` |
+| Image ref (from catalog) | `../attachments/{Name}.png` |
 
 ## Workflow
 
@@ -43,12 +43,13 @@ Produce an Entity-Relationship diagram for a **subset of tables** (seed list), r
    - **Attribute types**: Use only valid erDiagram types: `int`, `string`, `boolean`, `timestamp`, `uuid`, `text`. See **Valid erDiagram types** below.
    - Match style of `docs/mermaid/VenueEvent-VenueCreated.mmd`.
 
-5. **Render to SVG**
+5. **Render to PNG**
    Use **exactly** the `mmdc` command-line tool. Do **not** use `npx` or any other wrapper — invoke `mmdc` directly. Run from repository root with a **60-second timeout**:
    ```bash
    mmdc --puppeteerConfigFile .claude/skills/mermaid-erd/puppeteer-config.json \
-        -i docs/mermaid/{Name}.mmd -o docs/attachments/{Name}.svg
+        -i docs/mermaid/{Name}.mmd -o docs/attachments/{Name}.png
    ```
+   PNG is required because Mermaid ER diagrams use `<foreignObject>` for text labels, which browsers do not render inside `<img>` tags (the way Markdown preview displays images). SVG output would appear blank or broken in IDE Markdown previews.
    The committed `puppeteer-config.json` only adds `--no-sandbox` flags (safe on all platforms). `mmdc` uses its bundled Chromium by default — no extra setup needed on macOS or Windows. On Linux machines where the bundled binary is the wrong architecture, set `PUPPETEER_EXECUTABLE_PATH` to your system or Playwright Chromium path.
 
 6. **Embed in catalog entry**
@@ -56,7 +57,7 @@ Produce an Entity-Relationship diagram for a **subset of tables** (seed list), r
    ```markdown
    ## Table Dependencies
 
-   ![{Name} table dependencies](../attachments/{Name}.svg)
+   ![{Name} table dependencies](../attachments/{Name}.png)
 
    ### INSERT `TableName`
    ```
@@ -71,23 +72,23 @@ Run from **repository root**:
    ```
    Writes `docs/mermaid/{Name}.mmd` from the transitive closure of seed tables under FKs.
 
-2. **Render SVG** — use **exactly** `mmdc` (no npx); use a **60-second timeout**:
+2. **Render PNG** — use **exactly** `mmdc` (no npx); use a **60-second timeout**:
    ```bash
    mmdc --puppeteerConfigFile .claude/skills/mermaid-erd/puppeteer-config.json \
-        -i docs/mermaid/{Name}.mmd -o docs/attachments/{Name}.svg
+        -i docs/mermaid/{Name}.mmd -o docs/attachments/{Name}.png
    ```
 
 3. **Embed in catalog entry**:
    ```bash
    python3 .claude/skills/mermaid-erd/scripts/embed_erd_svg.py docs/events/FILE.md NAME
    ```
-   Inserts `![...](../attachments/{Name}.svg)` after `## Table Dependencies` if not already present.
+   Inserts `![...](../attachments/{Name}.png)` after `## Table Dependencies` if not already present.
 
 **Example** (VenueEvent-VenueCreated):
 ```bash
 python3 .claude/skills/mermaid-erd/scripts/generate_erd_mermaid.py VenueEvent-VenueCreated Venue
 mmdc --puppeteerConfigFile .claude/skills/mermaid-erd/puppeteer-config.json \
-     -i docs/mermaid/VenueEvent-VenueCreated.mmd -o docs/attachments/VenueEvent-VenueCreated.svg
+     -i docs/mermaid/VenueEvent-VenueCreated.mmd -o docs/attachments/VenueEvent-VenueCreated.png
 python3 .claude/skills/mermaid-erd/scripts/embed_erd_svg.py docs/events/VenueEvent-VenueCreated.md VenueEvent-VenueCreated
 ```
 
