@@ -1,6 +1,6 @@
 # SPEC001 — Venue Management
 
-- **User Story**: [US001 — Venue Management](../user-stories/US001-Venue-Management.md)
+- **User Story**: [US002 — Venue Management](../user-stories/US002-Venue-Management.md)
 - **Status**: Draft
 
 ---
