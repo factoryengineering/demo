@@ -2,4 +2,5 @@
   <Project Path="Festify.Api/Festify.Api.csproj" />
   <Project Path="Festify.DataWarehouse/Festify.DataWarehouse.csproj" />
   <Project Path="Festify.Tests/Festify.Tests.csproj" />
+  <Project Path="Festify.Web/Festify.Web.csproj" />
 </Solution>
