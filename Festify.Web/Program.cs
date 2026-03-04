@@ -1,4 +1,5 @@
 using Festify.Web.Components;
+using Festify.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ builder.Services.AddHttpClient("Festify.Api", client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl.TrimEnd('/'));
 });
+
+builder.Services.AddScoped<VenueService>();
 
 var app = builder.Build();
 

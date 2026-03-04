@@ -1,0 +1,61 @@
+@page "/venues"
+@inject VenueService VenueService
+
+<PageTitle>Venues - Festify</PageTitle>
+
+<main class="venues-page">
+    <h1>Venues</h1>
+
+    @if (_result is null)
+    {
+        <p class="venues-loading">Loading venues&hellip;</p>
+    }
+    else if (_result.Status == VenueLoadStatus.Unauthorized)
+    {
+        <div class="venues-error" role="alert">
+            <p>@_result.ErrorMessage</p>
+            <a href="/sign-in" class="btn-link">Sign in</a>
+        </div>
+    }
+    else if (_result.Status == VenueLoadStatus.NetworkError)
+    {
+        <div class="venues-error" role="alert">
+            <p>@_result.ErrorMessage</p>
+            <a href="/venues" class="btn-link">Retry</a>
+        </div>
+    }
+    else if (_result.Status == VenueLoadStatus.ServerError)
+    {
+        <div class="venues-error" role="alert">
+            <p>Venues could not be loaded.</p>
+            <a href="/venues" class="btn-link">Retry</a>
+        </div>
+    }
+    else
+    {
+        <div class="venues-list" role="list">
+            @if (!_result.Venues.Any())
+            {
+                <p class="venues-empty">No venues exist.</p>
+            }
+            else
+            {
+                @foreach (var venue in _result.Venues)
+                {
+                    <div class="venue-item" role="listitem">
+                        <span class="venue-name">@venue.Name</span>
+                    </div>
+                }
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private VenueLoadResult? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _result = await VenueService.GetVenuesAsync();
+    }
+}

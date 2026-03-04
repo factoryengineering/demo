@@ -9,6 +9,13 @@ namespace Festify.Api.Controllers;
 [Route("api/[controller]")]
 public class VenuesController(FestifyDbContext db) : ControllerBase
 {
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var venues = await db.Venues.OrderBy(v => v.Name).Select(v => ToResponse(v)).ToListAsync();
+        return Ok(venues);
+    }
+
     [HttpGet("{venueGuid}")]
     public async Task<IActionResult> GetByGuid(Guid venueGuid)
     {
