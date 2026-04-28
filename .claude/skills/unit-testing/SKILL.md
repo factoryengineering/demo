@@ -26,9 +26,15 @@ Test structure, in-memory DbContext, WebApplicationFactory integration tests, an
 - **Unit test DbContext setup** → [patterns/ef-core-in-memory-setup.md](patterns/ef-core-in-memory-setup.md)
 - **Integration tests (HTTP pipeline)** → [patterns/web-application-factory-setup.md](patterns/web-application-factory-setup.md)
 
+## Given helpers are mandatory (not optional)
+
+- Any test code that **constructs or seeds a domain entity** (`Venue`, `Act`, `Show`, `TicketSale`, …) must use a **`Given*` helper** from [patterns/test-data-helpers.md](patterns/test-data-helpers.md). Copy the helper into the test class if it is missing.
+- **Never** inline `new Entity { ... }` in a test method, **even when** neighboring tests in the same file already do that. Existing inline usage is non-compliant legacy; **do not copy it** and **do not leave it behind** when you edit that file—convert those call sites to `Given*` helpers in the **same change** as your test work.
+- **Never** skip helpers to keep a diff smaller or to avoid touching unrelated tests. Helper usage is part of the required implementation, not an optional cleanup.
+
 ## Prefer this skill over local patterns
 
-When writing or editing tests, follow the rules in this skill and the linked pattern docs. Do not copy inline `new Entity { ... }` or other anti-patterns from existing tests in the same file; those tests may not yet comply.
+When writing or editing tests, follow the rules in this skill and the linked pattern docs. Treat inline entity construction in the codebase as something to **replace**, not as permission to add more of the same.
 
 ## Mocking
 
@@ -40,7 +46,7 @@ When writing or editing tests, follow the rules in this skill and the linked pat
 1. AAA with Given/When/Then comments
 2. Test name: `MethodName_Scenario_ExpectedBehavior`
 3. Per-test isolation: `Guid.NewGuid()` for DB names where relevant
-4. Entity creation: Use only Given helpers from `patterns/test-data-helpers.md`; no inline `new Entity { ... }`. If the test class has no helper, add it from that file. Apply this even when other tests in the same file use inline entity creation—follow this skill, not the existing code.
+4. Entity creation: **Mandatory** `Given*` helpers only; see **Given helpers are mandatory** above. Same change must fix any remaining inline entity creation in the test file you touched.
 5. In Given helpers: navigation properties, never raw foreign key IDs
 6. Parent entities required in helper params; scalars optional with defaults
 7. Unit tests for logic; integration tests for HTTP contract

@@ -136,6 +136,6 @@ private Show GivenShow(Venue? venue = null, Act? act = null)
 
 This makes it unclear what state is required and loses compile-time safety.
 
-### ❌ Copying inline entity creation from other tests
+### ❌ Copying or preserving inline entity creation from other tests
 
-If another test in the file uses `new Venue { ... }` (or similar) to create entities, do not copy that pattern. Use the Given helper for that entity type and add it to the test class if it is missing.
+If another test in the file uses `new Venue { ... }` (or similar), do not copy that pattern—and when you edit that file for any test work, **replace** those inline constructions with the appropriate `Given*` helper in the **same change**. Helpers are mandatory; legacy inline code is debt to fix, not a template to follow.
