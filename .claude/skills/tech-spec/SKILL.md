@@ -60,6 +60,21 @@ Every spec follows this structure. Adapt section depth and content to scope (e.g
 
 ---
 
+### 5. Test Coverage
+
+A table linking acceptance criteria to test files. Each row maps a scenario ID (e.g. `AC01`) or scenario name to the test class and method that verifies it.
+
+```markdown
+| Scenario | Test file | Test method |
+|----------|-----------|-------------|
+| AC01 — Create venue | `Festify.Test/VenuesControllerTests.cs` | `PostVenue_ValidPayload_Returns201` |
+| AC05 — List all venues | `Festify.Test/VenuesControllerTests.cs` | `GetVenues_ReturnsAllVenues` |
+```
+
+Keep this section current as tests are added. If a scenario has no test yet, list it with "—" in the test columns so the gap is visible.
+
+---
+
 ## Checklist (when writing or reviewing a spec)
 
 1. Title and filename use the same SPEC number and a consistent short name.
@@ -69,6 +84,7 @@ Every spec follows this structure. Adapt section depth and content to scope (e.g
 5. API section includes an OpenAPI block; only paths/schemas owned by this spec are included.
 6. Ordering, empty list, errors, and identifier exposure are specified (in OpenAPI and/or Behaviour Notes).
 7. Status is set and matches project workflow (e.g. Draft until review).
+8. Test Coverage table is present; every acceptance criterion is either mapped to a test or marked with "—".
 
 ---
 

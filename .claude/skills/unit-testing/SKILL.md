@@ -41,6 +41,16 @@ When writing or editing tests, follow the rules in this skill and the linked pat
 - **Data**: EF Core InMemory only; do not mock `DbSet` or `FestifyDbContext`.
 - **External**: Mock email, payment, external APIs.
 
+## Traceability
+
+Every test method should be traceable to the acceptance criterion it verifies. The tech spec's Test Coverage table (§5 in `.claude/skills/tech-spec/`) maps scenario IDs to test classes and methods. When writing a new test:
+
+1. Identify the acceptance criterion (e.g. `AC01`) or scenario name from the user story or spec.
+2. Name the test so the scenario is recognizable: `MethodName_Scenario_ExpectedBehavior`.
+3. After writing the test, update the spec's Test Coverage table with the file path and method name.
+
+This keeps the chain intact: **persona → journey → user story → spec → test**.
+
 ## Checklist (Best Practices)
 
 1. AAA with Given/When/Then comments
