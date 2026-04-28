@@ -4,11 +4,52 @@
 
 ## Description
 
-As a **user**,
+As **Jordan the Venue Manager** (`docs/personas/venue-manager.md`),
 I want to **view a list of all venues from the Venues page, accessible from the landing page via a navigation card**,
 so that **I can browse available performance spaces by name and choose one for events or booking**.
 
 The Venues page is reached from the Festify landing page (Home) via a navigation card. The page calls the Festify API `VenuesController` to list all venues and displays them by name in a scrollable container.
+
+---
+
+## UI Description
+
+### Persona and Journey
+
+This page serves **Jordan the Venue Manager** (`docs/personas/venue-manager.md`) at steps 1–3 of **JNY-001 — Manage Venue Catalog** (`docs/journeys/JNY-001-Manage-Venue-Catalog.md`). Jordan arrives from the landing page and expects to scan a list of venues quickly to find one that needs attention.
+
+### Page Layout
+
+The page has a heading ("Venues") at the top. Below the heading is a scrollable container that fills the remaining viewport height. Inside the container, each venue appears as a row displaying the venue name.
+
+### Component Inventory
+
+| Component | Level | Description |
+|-----------|-------|-------------|
+| Page heading | Atom | Displays "Venues" |
+| Venue list container | Organism | Scrollable container holding the list of venues |
+| Venue list item | Molecule | Displays a single venue name as a clickable row |
+| Empty state message | Atom | Shown when the API returns no venues |
+| Error message | Molecule | Shown when the API call fails; includes a retry action |
+| Loading indicator | Atom | Shown while the API call is in progress |
+
+### Interaction Behavior
+
+- On page load, a loading indicator is shown while the API call is in progress.
+- When data arrives, the loading indicator is replaced by the venue list, sorted alphabetically by name.
+- If the API returns an empty list, the venue list container shows an empty-state message instead of rows.
+- If the API call fails, an error message replaces the list with a retry action. Clicking retry re-issues the API call.
+- The venue list is scrollable when the number of venues exceeds the viewport height.
+- Clicking a venue list item navigates to the venue detail view (see US002).
+
+### States
+
+| State | What the user sees | Visible components |
+|-------|--------------------|--------------------|
+| Loading | Loading indicator centered in the container | Loading indicator |
+| Loaded | Alphabetically sorted list of venue names | Venue list container, venue list items |
+| Empty | Message indicating no venues exist | Empty state message |
+| Error | Error message with retry action | Error message |
 
 ---
 
@@ -113,3 +154,14 @@ Feature: Venues page edge cases
     Then I see "Café René & Co." in the list
     And the name is fully visible and not corrupted
 ```
+
+---
+
+## Traceability
+
+| Artifact | Link |
+|----------|------|
+| **Persona** | [Jordan the Venue Manager](../personas/venue-manager.md) |
+| **Journey** | [JNY-001 — Manage Venue Catalog](../journeys/JNY-001-Manage-Venue-Catalog.md) (steps 1–3, 7) |
+| **Spec** | [SPEC001 — List Venues](../specs/SPEC001-List-Venues.md) |
+| **Tests** | `Festify.Tests/VenuesControllerTests.cs` |
