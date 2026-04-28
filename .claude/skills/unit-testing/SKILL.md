@@ -36,6 +36,13 @@ Test structure, in-memory DbContext, WebApplicationFactory integration tests, an
 
 When writing or editing tests, follow the rules in this skill and the linked pattern docs. Treat inline entity construction in the codebase as something to **replace**, not as permission to add more of the same.
 
+## EF Core In-Memory Provider Caveats
+
+The In-Memory provider does not behave identically to a real database. Be aware of these known differences:
+
+- **Case-sensitive string ordering**: On macOS/.NET, the In-Memory provider uses the platform default string comparison, which is case-insensitive. `OrderBy(v => v.Name)` will produce case-insensitive order even without `StringComparer.OrdinalIgnoreCase`. This means tests that verify case-insensitive ordering may pass even against a buggy implementation. If a test plan includes a case-sensitivity ordering scenario and the In-Memory provider masks the bug, report this honestly rather than writing a misleading test.
+- **No constraint enforcement**: The In-Memory provider does not enforce foreign keys, unique constraints, or max lengths. Tests that depend on constraint violations must use SQLite or a real database.
+
 ## Mocking
 
 - **Data**: EF Core InMemory only; do not mock `DbSet` or `FestifyDbContext`.

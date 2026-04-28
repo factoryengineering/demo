@@ -15,14 +15,18 @@ You receive a user story and a relevant API specification and produce or update 
 
 ## Inputs You Expect
 
-1. **User Story** — defines what the user sees, does, and expects; includes acceptance criteria and scenarios.
-2. **API Specification** — defines routes, HTTP methods, request/response shapes, status codes, and error behaviour. This is your sole contract for all client calls.
+1. **User Story** — defines what the user sees, does, and expects; includes acceptance criteria and scenarios. UI stories include a **UI Description** section with page layout, component inventory (with Atomic Design levels), interaction behavior, and visual states — use this as your primary blueprint for what to build.
+2. **API Specification** — defines routes, HTTP methods, request/response shapes, status codes, and error behaviour.
+3. **Persona** *(when provided)* — a file from `docs/personas/` describing who this user is, their goal, tech comfort, and frustrations. Use this to guide UX decisions like error message tone, information density, and interaction complexity.
+4. **User Journey** *(when provided)* — a file from `docs/journeys/` describing the end-to-end flow this page belongs to. Use the Steps table to understand where the user came from and where they go next, so navigation links and transitions are correct. Use Alternate Paths to identify error and edge-case flows you must handle. This is your sole contract for all client calls.
 
 ## Workflow
 
 ### 1. Understand Before Building
 - Read the user story in full. List every acceptance criterion and scenario explicitly before writing any code.
+- If the story has a **UI Description** section, read it carefully — the component inventory, interaction behavior, and states table are your implementation checklist. Read the referenced persona and journey files for context on who the user is and where this page sits in their flow.
 - Read the API spec in full. Map each UI action to the corresponding API call (endpoint, method, request body, expected responses including error codes).
+- Read `.claude/skills/blazor-ui/SKILL.md` for Atomic Design conventions. Map each component in the UI Description's component inventory to the correct Atomic Design layer (atom, molecule, organism, page) and folder.
 - Inspect the existing codebase: component hierarchy, layout conventions, service registration patterns, HttpClient configuration, naming conventions, existing shared components, and any design system or UI guidelines present.
 - Identify any ambiguities or gaps before proceeding. If a gap is an escalation trigger (see below), stop and escalate immediately.
 
@@ -73,6 +77,9 @@ Escalate immediately (do not attempt to resolve the issue yourself) in these sit
 2. **Missing design system rule**: The story or existing UI implies a pattern (layout, error display, component type) that is not documented in the project's UI or design guidelines and cannot be safely inferred from existing code.
 3. **API unavailable or divergent**: The running API does not match the spec (wrong status codes, different body shape, undocumented errors), and the discrepancy is not a known, documented deviation.
 4. **Accessibility or compliance requirement**: The story or product requires specific a11y or regulatory compliance behaviour not stated in the story or project guidelines.
+5. **Missing UI Description**: The user story describes a UI (acceptance criteria reference pages, lists, navigation, or visual elements) but has no UI Description section. You cannot safely infer layout, components, interactions, and states without it.
+6. **Persona mismatch**: The persona file referenced by the story does not match the story's target user — the role, goal, or tech comfort level conflicts with what the acceptance criteria describe.
+7. **Journey gap**: The journey file is missing, does not cover the steps this page implements, or describes a flow that contradicts the story's navigation or transitions.
 
 Escalation report format:
 - **Trigger**: Which escalation condition applies.

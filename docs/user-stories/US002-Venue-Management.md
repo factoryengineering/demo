@@ -33,37 +33,35 @@ The venue detail page has a heading displaying the venue name at the top, with a
 | Validation message | Atom | Inline message shown beneath a field when validation fails |
 | Save button | Atom | Submits the form to create or update the venue |
 | Delete button | Atom | Triggers a confirmation before deleting the venue |
-| Delete confirmation | Molecule | Modal or inline prompt asking Jordan to confirm deletion |
-| Success message | Atom | Briefly shown after a successful save or delete |
+| Delete confirmation page | Template | Separate page asking Jordan to confirm deletion; shows venue name, confirm button, cancel link |
+| Success message | Atom | Shown after redirect when save succeeds (driven by query parameter) |
 | Error message | Molecule | Shown when the API call fails; describes the problem |
-| Loading indicator | Atom | Shown while the venue data is loading or a save is in progress |
 | Create venue button | Atom | On the Venues list page; opens the form with empty fields |
 
 ### Interaction Behavior
 
-- On page load, a loading indicator is shown while the venue data is fetched by VenueGuid.
-- When data arrives, the form is populated with the venue's current values.
+The app uses static server-side rendering (SSR) with no interactive Blazor render mode. All form submissions and navigation are full page requests — there is no client-side interactivity. This constrains the interaction model:
+
+- On page load, the server fetches venue data by VenueGuid and renders the form pre-populated with the venue's current values. If the data is unavailable, the server renders the error state directly.
 - If the venue is not found (404), an error message is shown with a back link to the venue list.
-- Jordan edits fields directly in the form. Validation runs on submit, not on each keystroke.
-- Clicking Save submits the form. If validation fails, inline validation messages appear beneath the invalid fields and the form is not submitted.
-- On successful save, a success message is shown briefly and Jordan remains on the detail page with updated values.
-- If the save fails (API error), an error message is shown and the form retains Jordan's edits so nothing is lost.
-- Clicking Delete shows a delete confirmation. Confirming deletes the venue and navigates back to the venue list. Cancelling dismisses the confirmation with no side effects.
-- If the delete fails, an error message is shown and the venue remains.
-- The Create venue button on the Venues list page opens the same form with empty fields. Saving creates a new venue and navigates to its detail page.
+- Jordan edits fields directly in the form. Validation runs on form submission (server-side), not on each keystroke.
+- Clicking Save submits the form as a standard POST. If validation fails, the server re-renders the page with inline validation messages beneath the invalid fields and the form populated with Jordan's submitted values.
+- On successful save, the server redirects to the detail page with a success query parameter (e.g. `?saved=true`) so a success message can be shown on the re-rendered page.
+- If the save fails (API error), the server re-renders the form with an error message above it and Jordan's submitted values preserved.
+- Clicking Delete submits a POST to a delete action. The server shows a confirmation page (a separate page or the same page with a confirmation state) rather than a client-side modal. Confirming submits a second POST that deletes the venue and redirects to the venue list. Cancelling navigates back to the detail page with no side effects.
+- If the delete fails, the server re-renders with an error message and the venue remains.
+- The Create venue button on the Venues list page navigates to the form page with no VenueGuid, which renders empty fields. Saving creates a new venue and redirects to its detail page.
 
 ### States
 
 | State | What the user sees | Visible components |
 |-------|--------------------|--------------------|
-| Loading | Loading indicator while venue data is fetched | Loading indicator |
-| Viewing / Editing | Form populated with venue data | Back link, heading, venue form, save button, delete button |
+| Loaded | Form populated with venue data | Back link, heading, venue form, save button, delete button |
 | Creating | Empty form for a new venue | Back link, heading ("New Venue"), venue form, save button |
-| Validation error | Form with inline messages beneath invalid fields | Venue form, validation messages, save button |
-| Save in progress | Form with a disabled save button and loading indicator | Venue form, loading indicator |
-| Save success | Brief success message | Success message, venue form with updated values |
-| Save error | Error message above the form; edits preserved | Error message, venue form |
-| Delete confirmation | Confirmation prompt over the form | Delete confirmation |
+| Validation error | Form re-rendered with inline messages beneath invalid fields | Venue form (with submitted values), validation messages, save button |
+| Save success | Form with a brief success message (via query parameter) | Success message, venue form with updated values |
+| Save error | Error message above the form; submitted values preserved | Error message, venue form |
+| Delete confirmation | Confirmation page asking Jordan to confirm deletion | Confirm button, cancel link, venue name |
 | Not found | Error message indicating the venue does not exist | Error message, back link |
 
 ---

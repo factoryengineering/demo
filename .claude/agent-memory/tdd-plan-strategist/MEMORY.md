@@ -28,6 +28,6 @@
 - VenueId is internal only, never in VenueResponse
 
 ### Existing Endpoints
+- `GET /api/venues` - List all venues (ordered by name)
 - `GET /api/venues/{venueGuid}` - GetByGuid
 - `POST /api/venues` - Create
-- `GET /api/venues` (list all) - NOT YET IMPLEMENTED

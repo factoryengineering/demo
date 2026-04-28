@@ -79,6 +79,19 @@ FUNCTION implement_spec(user_input):
     LOOP: delegate to backend-api-engineer or re-run tdd-cycle until green and spec-compliant
 
 
+  // ── STEP 1b: UPDATE SPEC TEST COVERAGE TABLE ─────────────────────────────
+
+  // The TDD cycle produced tests. Update the spec's §5 Test Coverage table
+  // so every acceptance criterion maps to the test class and method that verifies it.
+  COLLECT test_files and test_methods created or modified during Step 1
+  FOR EACH acceptance criterion in user_story (AC01, AC02, …) or spec behaviour notes:
+    FIND the test method that verifies this criterion
+    UPDATE the spec's Test Coverage table with: scenario name/ID, test file path, test method name
+  IF a criterion has no corresponding test:
+    MARK it with "—" in the test columns so the gap is visible
+  WRITE updated spec to disk
+
+
   // ── STEP 2: DATA WAREHOUSE / EVENT CATALOG (conditional) ──────────────────
 
   IF spec defines or references domain events (e.g. "Events" section, or event catalog entries in docs/events):
@@ -97,9 +110,16 @@ FUNCTION implement_spec(user_input):
 
   // ── STEP 3: FRONTEND IMPLEMENTATION ────────────────────────────────────────
 
+  IF user_story has a UI Description section:
+    persona = load_document(user_story.ui_description.persona_path)
+    journey = load_document(user_story.ui_description.journey_path)
+  ELSE:
+    persona = null
+    journey = null
+
   delegate_to(frontend-blazor, {
-    task: "Implement or update Blazor UI so that the user story acceptance criteria are satisfied, using the API contract from the spec",
-    input: user_story, spec
+    task: "Implement or update Blazor UI so that the user story acceptance criteria are satisfied, using the API contract from the spec. Use the UI Description for layout, component inventory, interaction behavior, and states. Use the persona for context on who the user is and what they expect. Use the journey to understand where this page sits in the flow and what pages link to and from it.",
+    input: user_story, spec, persona, journey
   })
 
   ON escalation FROM frontend-blazor:
@@ -174,7 +194,7 @@ FUNCTION HANDLE_ESCALATION(escalation_payload):
         CONSIDER delegating to tech-lead-architect or backend-api-engineer to fix source of truth
       RESUME from Step 2 only after catalog/spec/backend are aligned
 
-    // Frontend-blazor escalations: story-spec conflict, missing design rule, API divergent, a11y/compliance
+    // Frontend-blazor escalations: story-spec conflict, missing design rule, API divergent, a11y/compliance, UX doc issues
     IF agent == frontend-blazor:
       IF escalation_type == "story_spec_conflict" OR "api_divergent":
         delegate_to(tech-lead-architect, {
@@ -185,6 +205,25 @@ FUNCTION HANDLE_ESCALATION(escalation_payload):
       IF escalation_type == "missing_design_rule" OR "accessibility_compliance":
         PRESENT to user; ASK for design or product guidance
         RESUME from Step 3 only after guidance is provided or deferred
+      IF escalation_type == "missing_ui_description":
+        // User story describes a UI but has no UI Description section
+        PRESENT to user: "This story needs a UI Description section (layout, components, interactions, states) before the frontend can be built."
+        ASK user to add the section or delegate:
+          delegate_to(tech-lead-architect, {
+            task: "Add a UI Description section to this user story following the ui-description skill format. Reference the persona and journey.",
+            input: user_story, persona, journey
+          })
+        ON success: RELOAD user_story; RESUME from Step 3
+      IF escalation_type == "persona_mismatch":
+        // Persona does not match the story — wrong role, missing file, or stale attributes
+        PRESENT observation to user: which persona field conflicts and what the story expects
+        ASK user to update the persona file or the story's persona reference
+        RESUME from Step 3 only after persona and story are aligned
+      IF escalation_type == "journey_gap":
+        // Journey is missing, out of sync with the page flow, or does not cover steps this page needs
+        PRESENT observation to user: which journey steps are missing or inconsistent
+        ASK user to update the journey or confirm the intended flow
+        RESUME from Step 3 only after journey matches the page flow
 
     // TDD cycle (or its sub-agents) escalations: re-planning, ambiguous requirements, design conflict
     IF escalation originates from tdd-cycle or tdd-* agent:
@@ -215,7 +254,7 @@ FUNCTION HANDLE_ESCALATION(escalation_payload):
 | **tdd-cycle**           | Backend implementation (tests + code)   | Spec as feature requirements   | Tests + backend code       |
 | **backend-api-engineer**| After TDD to complete/align with spec   | Spec, current codebase         | Spec-compliant backend     |
 | **data-analytics-agent**| Spec defines or references domain events | Spec, event catalog, user story | Catalog + schema + load    |
-| **frontend-blazor**     | UI for the user story                   | User story, spec               | Blazor pages/components    |
+| **frontend-blazor**     | UI for the user story                   | User story (incl. UI Description), spec, persona, journey | Blazor pages/components    |
 
 ---
 
