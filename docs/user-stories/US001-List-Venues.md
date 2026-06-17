@@ -163,5 +163,6 @@ Feature: Venues page edge cases
 |----------|------|
 | **Persona** | [Jordan the Venue Manager](../personas/venue-manager.md) |
 | **Journey** | [JNY-001 — Manage Venue Catalog](../journeys/JNY-001-Manage-Venue-Catalog.md) (steps 1–3, 7) |
+| **Wireframe** | [WF001 — List Venues](../wireframes/WF001-List-Venues.md) |
 | **Spec** | [SPEC001 — List Venues](../specs/SPEC001-List-Venues.md) |
 | **Tests** | `Festify.Tests/VenuesControllerTests.cs` |

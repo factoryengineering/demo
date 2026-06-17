@@ -170,5 +170,6 @@ Feature: Delete a venue
 |----------|------|
 | **Persona** | [Jordan the Venue Manager](../personas/venue-manager.md) |
 | **Journey** | [JNY-001 — Manage Venue Catalog](../journeys/JNY-001-Manage-Venue-Catalog.md) (steps 4–6) |
+| **Wireframe** | [WF002 — Venue Management](../wireframes/WF002-Venue-Management.md) |
 | **Spec** | [SPEC002 — Venue Management](../specs/SPEC002-Venue-Management.md) |
 | **Tests** | `Festify.Tests/VenuesControllerTests.cs` |

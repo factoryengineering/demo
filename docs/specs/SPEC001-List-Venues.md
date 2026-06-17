@@ -1,6 +1,7 @@
 # SPEC001 — List Venues
 
 - **User Story**: [US001 — List Venues](../user-stories/US001-List-Venues.md)
+- **Wireframe**: [WF001 — List Venues](../wireframes/WF001-List-Venues.md)
 - **Status**: Draft
 
 ---

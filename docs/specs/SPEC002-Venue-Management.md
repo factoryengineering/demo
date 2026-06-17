@@ -1,6 +1,7 @@
-# SPEC001 — Venue Management
+# SPEC002 — Venue Management
 
 - **User Story**: [US002 — Venue Management](../user-stories/US002-Venue-Management.md)
+- **Wireframe**: [WF002 — Venue Management](../wireframes/WF002-Venue-Management.md)
 - **Status**: Draft
 
 ---
