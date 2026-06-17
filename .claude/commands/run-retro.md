@@ -4,7 +4,7 @@ Use this command to review agent memory files for stale information, lessons lea
 
 ## Inputs
 
-No arguments required. The retro covers all agent memory directories in `.claude/agent-memory/`.
+No arguments required. The retro covers all agent memory files in `docs/memories/`.
 
 ---
 
@@ -12,7 +12,7 @@ No arguments required. The retro covers all agent memory directories in `.claude
 
 ### 1. Inventory agent memory
 
-Read every file in `.claude/agent-memory/*/` — both `MEMORY.md` indexes and any topic files (e.g. `patterns.md`, `debugging.md`). List the agents that have memory and note which agents have no memory directory yet.
+Read every file in `docs/memories/*.md`. Each file is named `{agent-name}.md` and corresponds to a subagent in `.cursor/agents/`. List the agents that have memory content and note which agents in `.cursor/agents/` have no memory file yet (or only empty section placeholders).
 
 ### 2. Check for stale facts
 
@@ -39,7 +39,7 @@ Look for knowledge that is trapped in one agent's memory but would benefit all a
 
 ### 5. Check alignment with skills and workflows
 
-For each agent that has memory, read the corresponding agent definition (`.claude/agents/<agent-name>.md`) and any skills it references. Flag:
+For each agent that has memory, read the corresponding agent definition (`.cursor/agents/<agent-name>.md`) and any skills it references. Flag:
 
 - Memory entries that contradict skill documentation.
 - Workflow inputs or outputs that have changed since the memory was written.

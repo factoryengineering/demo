@@ -42,37 +42,43 @@ FUNCTION tdd_cycle(feature_requirements):
   current_plan = test_plan
   completed_tests = []
   pending_tests  = current_plan.tests
+  MAX_BATCH_SIZE = 5   // small group of related tests from the same TDD phase
 
 
   // ── PHASE 2: RED-GREEN-REFACTOR LOOP ───────────────────────────────────────
 
   WHILE pending_tests is not empty:
 
-    next_test = pending_tests[0]
+    next_batch = select_batch(pending_tests, MAX_BATCH_SIZE):
+      // Take contiguous tests from the front of pending_tests that share the same TDD phase
+      // (Phase 1, 2, or 3 — labeled in the plan by tdd-plan-strategist)
+      // Stop at the phase boundary; cap at MAX_BATCH_SIZE
+      // Prefer batches where tests share structural context (same type, endpoint, or test class)
+      // A batch of 1 is always valid when tests are unrelated or cross a natural boundary
 
 
     // ── 2a. RED PHASE ──────────────────────────────────────────────────────
 
     red_result = delegate_to(tdd-test-writer, {
-      task: "Write ONE failing test for this scenario",
-      scenario: next_test,
-      acceptance_criteria: next_test.criteria,
+      task: "Write failing tests for this related group (same TDD phase)",
+      scenarios: next_batch,
+      phase: next_batch[0].phase,
+      acceptance_criteria: next_batch[*].criteria,
       existing_tests: completed_tests   // for context and consistency
     })
 
     HANDLE red_result escalations:
 
       CASE "test_too_broad":
-        // Agent signals the scenario is too large for one test
-        SPLIT next_test INTO [subtests...]
-        INSERT subtests at front of pending_tests
-        REMOVE original next_test
-        CONTINUE loop (retry with first subtest)
+        // Agent signals the batch or a scenario is too large
+        SPLIT offending scenario INTO [subtests...]
+        INSERT subtests at front of pending_tests (replacing the original entry)
+        CONTINUE loop (retry with a smaller batch)
 
       CASE "prerequisite_missing":
         // Agent needs a dependency (file, type, interface) that doesn't exist yet
-        INSERT prerequisite_test BEFORE next_test in pending_tests
-        CONTINUE loop (write prerequisite test first)
+        INSERT prerequisite_test BEFORE next_batch in pending_tests
+        CONTINUE loop (write prerequisite test first — often as a batch of 1)
 
       CASE "plan_assumption_wrong":
         // Agent discovers the codebase differs from what the plan assumed
@@ -81,22 +87,23 @@ FUNCTION tdd_cycle(feature_requirements):
 
       CASE "ambiguous_requirements":
         ASK USER one focused clarifying question
-        UPDATE next_test with clarified criteria
+        UPDATE affected scenario(s) in next_batch with clarified criteria
         RETRY red phase
 
-    ASSERT red_result.test_fails == true
-    IF test passes unexpectedly:
-      INVESTIGATE with tdd-test-writer — test may be testing the wrong thing
-      FIX the test before proceeding
+    FOR EACH test IN red_result.tests:
+      ASSERT test.fails == true
+      IF test passes unexpectedly:
+        INVESTIGATE with tdd-test-writer — test may be testing the wrong thing
+        FIX the test before proceeding
 
 
-    // ── 2b. GREEN PHASE ────────────────────────────────────────────────────
+    // ── 2b. GREEN PHASE ──────────────────────────────────────────────────────
 
     green_result = delegate_to(tdd-code-writer, {
-      task: "Write minimal code to make this failing test pass",
-      failing_test: red_result.test,
-      test_file: red_result.test_file,
-      constraint: "Do not implement anything beyond what the test requires"
+      task: "Write minimal code to make all failing tests in this batch pass",
+      failing_tests: red_result.tests,
+      phase: next_batch[0].phase,
+      constraint: "Do not implement anything beyond what these tests require"
     })
 
     HANDLE green_result escalations:
@@ -115,9 +122,16 @@ FUNCTION tdd_cycle(feature_requirements):
       CASE "test_is_untestable":
         // Test structure makes it impossible to produce green without over-engineering
         RETURN to tdd-test-writer with green_result.feedback
-        REVISE test, then RETRY green phase
+        REVISE test(s) in batch, then RETRY red phase
+
+      CASE "batch_conflict":
+        // Tests in the batch cannot be made green together with minimal code
+        SHRINK next_batch or SPLIT batch in pending_tests
+        RETRY from red phase with smaller batch
 
     ASSERT green_result.all_tests_pass == true
+    FOR EACH test IN red_result.tests:
+      ASSERT test.passes == true
     IF any previously passing test now fails:
       RETURN to tdd-code-writer: "Fix the regression — keep all existing tests green"
 
@@ -158,8 +172,8 @@ FUNCTION tdd_cycle(feature_requirements):
 
       ASSERT refactor_result.all_tests_pass == true
 
-    ADD next_test to completed_tests
-    REMOVE next_test from pending_tests
+    ADD all tests in next_batch to completed_tests
+    REMOVE next_batch from pending_tests
 
 
   // ── PHASE 3: RE-PLANNING (triggered by escalations above) ─────────────────
@@ -203,17 +217,17 @@ FUNCTION tdd_cycle(feature_requirements):
 
 | Agent | Input | Expected Output | Common Escalations |
 |---|---|---|---|
-| `tdd-plan-strategist` | Feature requirements + any discovery notes | Ordered test plan in `docs/tdd/` | Plan needs revision after discovery |
-| `tdd-test-writer` | One scenario + acceptance criteria | One failing test, confirmed red | Too broad, prerequisite missing, assumption wrong |
-| `tdd-code-writer` | One failing test | Minimal passing code, all tests green | Design conflict, untestable test |
+| `tdd-plan-strategist` | Feature requirements + any discovery notes | Ordered test plan in `docs/tdd/` with phase labels | Plan needs revision after discovery |
+| `tdd-test-writer` | A small group of related scenarios from the same TDD phase (1–5 tests) | Failing tests, all confirmed red | Too broad, prerequisite missing, assumption wrong |
+| `tdd-code-writer` | Failing tests from the same batch (1–5 tests, same TDD phase) | Minimal passing code, all batch tests green | Design conflict, batch conflict, untestable test |
 | `tdd-refactor` | Specific smell + green test suite | Cleaner code, tests still green | Tests coupled to implementation, scope too large |
 
 ---
 
 ## Quality Gates (Never Skip)
 
-1. **Before Green phase**: Confirm the new test actually fails. A test that already passes is worthless.
-2. **After Green phase**: Confirm ALL tests pass — not just the new one.
+1. **Before Green phase**: Confirm each new test in the batch actually fails. A test that already passes is worthless.
+2. **After Green phase**: Confirm ALL tests in the batch pass — and no previously passing tests regressed.
 3. **After Refactor phase**: Confirm ALL tests still pass. Revert if any fail.
 4. **Before marking complete**: Run the full suite and CI.
 
@@ -224,5 +238,6 @@ FUNCTION tdd_cycle(feature_requirements):
 - **Trust agent feedback.** When an agent escalates, treat it as signal, not noise. Adjust the plan rather than forcing the agent to proceed on flawed assumptions.
 - **Re-planning is normal.** Discovering that reality differs from the plan is progress, not failure. A revised plan informed by implementation is better than the original plan.
 - **Never skip Red.** If there is pressure to "just implement it," write the test first anyway. Green without Red is not TDD.
+- **Batch Red and Green.** The test writer authors a small group of related failing tests from the same TDD phase; the code writer makes the whole batch pass with minimal implementation in one pass.
 - **Refactor is optional, not obligatory.** Skip it if the code is already clean. Do not invent refactoring work.
 - **Keep humans in the loop for scope changes.** If discoveries suggest the feature is significantly larger than described, pause and inform the user before re-planning.
